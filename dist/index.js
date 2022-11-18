@@ -1,59 +1,78 @@
 "use strict";
-class Component {
-    constructor(templateId, renderElemId, insertAtStart, newElemId) {
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var Component = /** @class */ (function () {
+    function Component(templateId, renderElemId, insertAtStart, newElemId) {
         this.templateElem = document.getElementById(templateId);
         this.renderElem = document.getElementById(renderElemId);
-        const importedNode = document.importNode(this.templateElem.content, true);
+        var importedNode = document.importNode(this.templateElem.content, true);
         this.element = importedNode.firstElementChild;
         if (newElemId)
             this.element.id = newElemId;
         this.attach(insertAtStart);
     }
-    attach(insert) {
+    Component.prototype.attach = function (insert) {
         this.renderElem.insertAdjacentElement(insert ? 'afterbegin' : 'beforeend', this.element);
-    }
-}
-class ListenerState {
-    constructor() {
+    };
+    return Component;
+}());
+var ListenerState = /** @class */ (function () {
+    function ListenerState() {
         this.listeners = [];
     }
-    addListener(listenerFn) {
+    ListenerState.prototype.addListener = function (listenerFn) {
         this.listeners.push(listenerFn);
+    };
+    return ListenerState;
+}());
+var State = /** @class */ (function (_super) {
+    __extends(State, _super);
+    function State() {
+        var _this = _super.call(this) || this;
+        _this.listItems = [];
+        _this.listItems = [];
+        return _this;
     }
-}
-class State extends ListenerState {
-    constructor() {
-        super();
-        this.listItems = [];
-        this.listItems = [];
-    }
-    static getInstance() {
+    State.getInstance = function () {
         if (this.instance)
             return this.instance;
         this.instance = new State();
         return this.instance;
-    }
-    getList() {
+    };
+    State.prototype.getList = function () {
         return this.listItems;
-    }
-    setList(listItem) {
-        this.listItems = listItem.map((item, index) => new Item(item, index));
+    };
+    State.prototype.setList = function (listItem) {
+        this.listItems = listItem.map(function (item, index) { return new Item(item, index); });
         this.updateListeners();
-    }
-    addItem(listItem) {
+    };
+    State.prototype.addItem = function (listItem) {
         this.listItems.push(new Item(listItem, this.listItems.length - 1));
         this.updateListeners();
-    }
-    changeItem(itemId) {
-        this.listItems = this.listItems.map(r => {
+    };
+    State.prototype.changeItem = function (itemId) {
+        this.listItems = this.listItems.map(function (r) {
             if (itemId.includes(r.id))
                 r.handleSelect();
             return r;
         });
         this.updateListeners();
-    }
-    changeState() {
-        this.listItems = this.listItems.map(item => {
+    };
+    State.prototype.changeState = function () {
+        this.listItems = this.listItems.map(function (item) {
             if (item.selected) {
                 if (item.state === "available")
                     item.state = "picked";
@@ -64,124 +83,138 @@ class State extends ListenerState {
             return item;
         });
         this.updateListeners();
-    }
-    updateListeners() {
-        for (const listenerFn of this.listeners) {
+    };
+    State.prototype.updateListeners = function () {
+        for (var _i = 0, _a = this.listeners; _i < _a.length; _i++) {
+            var listenerFn = _a[_i];
             listenerFn(this.listItems.slice());
         }
-    }
-}
-const prjState = State.getInstance();
-class ItemStyle {
-    constructor(styleClass, value) {
+    };
+    return State;
+}(ListenerState));
+var prjState = State.getInstance();
+var ItemStyle = /** @class */ (function () {
+    function ItemStyle(styleClass, value) {
         this.styleClass = styleClass;
         this.value = value;
     }
-}
-class Item {
-    constructor(element, index) {
+    return ItemStyle;
+}());
+var Item = /** @class */ (function () {
+    function Item(element, index) {
         this.state = "available";
         this.id = new Date().getTime();
         this.id += index;
         this.element = element;
         this.selected = false;
     }
-    handleSelect() {
+    Item.prototype.handleSelect = function () {
         this.selected = !this.selected;
-    }
-}
-class Render extends Component {
-    constructor(hostId, item) {
-        super('item', hostId, false);
-        this.dragEndHandler = (_) => {
+    };
+    return Item;
+}());
+var Render = /** @class */ (function (_super) {
+    __extends(Render, _super);
+    function Render(hostId, item) {
+        var _this = _super.call(this, 'item', hostId, false) || this;
+        _this.dragEndHandler = function (_) {
             console.log('DragEnd');
         };
-        this.item = item;
-        this.configure();
-        this.contentRender();
+        _this.item = item;
+        _this.configure();
+        _this.contentRender();
+        return _this;
     }
-    configure() {
+    Render.prototype.configure = function () {
+        var _this = this;
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
-        this.element.addEventListener('click', () => { prjState.changeItem([this.item.id]); console.log(this.item); });
-    }
-    contentRender() {
+        this.element.addEventListener('click', function () { prjState.changeItem([_this.item.id]); console.log(_this.item); });
+    };
+    Render.prototype.contentRender = function () {
         this.element.querySelector('h2').innerText = this.item.element.title;
         this.element.querySelector('p').innerText = this.item.element.description;
-    }
-    dragStartHandler(event) {
+    };
+    Render.prototype.dragStartHandler = function (event) {
         event.dataTransfer.setData('text/plain', this.item.id.toString());
         event.dataTransfer.effectAllowed = 'move';
-    }
-}
-class List extends Component {
-    constructor(type) {
-        super('list', 'app', false, `${type}-items`);
-        this.type = type;
-        this.listItems = [];
-        this.dragLeaveHandler = (_) => {
-            const listEl = this.element.querySelector('ul');
+    };
+    return Render;
+}(Component));
+var List = /** @class */ (function (_super) {
+    __extends(List, _super);
+    function List(type) {
+        var _this = _super.call(this, 'list', 'app', false, "".concat(type, "-items")) || this;
+        _this.type = type;
+        _this.listItems = [];
+        _this.dragLeaveHandler = function (_) {
+            var listEl = _this.element.querySelector('ul');
             listEl.classList.remove('droppable');
         };
-        this.dragOverHandler = (event) => {
+        _this.dragOverHandler = function (event) {
             if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
                 event.preventDefault();
-                const listEl = this.element.querySelector('ul');
+                var listEl = _this.element.querySelector('ul');
                 listEl.classList.add('droppable');
             }
         };
-        this.configure();
-        this.contentRender();
+        _this.configure();
+        _this.contentRender();
+        return _this;
     }
-    configure() {
+    List.prototype.configure = function () {
+        var _this = this;
         var _a;
         this.element.addEventListener('dragover', this.dragOverHandler);
         this.element.addEventListener('dragleave', this.dragLeaveHandler);
         this.element.addEventListener('drop', this.dropHandler);
-        (_a = this.element.querySelector('.move-right')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
+        (_a = this.element.querySelector('.move-right')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
             prjState.changeState();
         });
-        prjState.addListener((items => {
-            this.listItems = items.filter(item => item.state === this.type);
-            console.log(this.listItems);
-            this.itemsRender();
+        prjState.addListener((function (items) {
+            _this.listItems = items.filter(function (item) { return item.state === _this.type; });
+            console.log(_this.listItems);
+            _this.itemsRender();
         }));
-    }
-    contentRender() {
-        this.element.querySelector('ul').id = `${this.type}-items-list`;
-        this.element.querySelector('h2').innerText = `${this.type.toUpperCase()} ITEMS`;
-    }
-    itemsRender() {
-        const listEl = document.getElementById(`${this.type}-items-list`);
+    };
+    List.prototype.contentRender = function () {
+        this.element.querySelector('ul').id = "".concat(this.type, "-items-list");
+        this.element.querySelector('h2').innerText = "".concat(this.type.toUpperCase(), " ITEMS");
+    };
+    List.prototype.itemsRender = function () {
+        var listEl = document.getElementById("".concat(this.type, "-items-list"));
         listEl.innerHTML = '';
-        for (const prjItem of this.listItems) {
+        for (var _i = 0, _a = this.listItems; _i < _a.length; _i++) {
+            var prjItem = _a[_i];
             new Render(this.element.querySelector('ul').id, prjItem);
         }
-    }
-    dropHandler(event) {
-    }
-}
-const mock = {
+    };
+    List.prototype.dropHandler = function (event) {
+    };
+    return List;
+}(Component));
+var mock = {
     id: 1,
     title: "toto",
     description: "michel",
     value: 5,
     type: 'text'
 };
-const mockedList = new List("available");
-const mockedListSelected = new List("picked");
-class ItemTest {
-    constructor(id, title, description, people, status) {
+var mockedList = new List("available");
+var mockedListSelected = new List("picked");
+var ItemTest = /** @class */ (function () {
+    function ItemTest(id, title, description, people, status) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.people = people;
         this.status = status;
     }
-}
-const listData = [];
-for (let i = 0; i < 10; i++) {
-    let test = new ItemTest(i.toString(), Math.random().toString() + ' test', 'test', i + 20, 0);
+    return ItemTest;
+}());
+var listData = [];
+for (var i = 0; i < 10; i++) {
+    var test = new ItemTest(i.toString(), Math.random().toString() + ' test', 'test', i + 20, 0);
     listData.push(test);
     // prjState.addItem(test);
 }
