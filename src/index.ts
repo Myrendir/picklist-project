@@ -63,6 +63,10 @@ class State extends ListenerState<Item> {
         return this.instance;
     }
 
+    getList() {
+        return this.listItems;
+    }
+
     setList(listItem: any[]) {
         this.listItems = listItem.map((item, index) => new Item(item, index));
         this.updateListeners();
@@ -78,6 +82,22 @@ class State extends ListenerState<Item> {
             if (itemId.includes(r.id)) r.handleSelect();
             return r;
         });
+        this.updateListeners();
+    }
+
+    changeState() {
+        this.listItems = this.listItems.map(item => {
+            if (item.selected) {
+                if(item.state === "available")
+                    item.state = "picked";
+                else
+                    item.state = "available";
+                
+                item.selected = false;
+            }
+            return item;
+        })
+
         this.updateListeners();
     }
 
@@ -105,6 +125,7 @@ class Item {
     id: number;
     element: any;
     selected: boolean;
+    state: "available"|"picked" = "available";
 
     constructor(element: any, index: number) {
         this.id = new Date().getTime();
@@ -132,6 +153,7 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
     configure() {
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
+        this.element.addEventListener('click', () => { prjState.changeItem([this.item.id]); console.log(this.item) });
     }
 
     contentRender() {
@@ -152,11 +174,10 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
 
 class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget {
 
-    assignedItems: Item[];
+    listItems: Item[] = [];
 
-    constructor(private type: 'available' | 'selected') {
+    constructor(private type: 'available' | 'picked') {
         super('list', 'app', false, `${type}-items`);
-        this.assignedItems = [];
         this.configure();
         this.contentRender();
     }
@@ -166,8 +187,13 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
         this.element.addEventListener('dragleave', this.dragLeaveHandler);
         this.element.addEventListener('drop', this.dropHandler);
 
+        this.element.querySelector('.move-right')?.addEventListener('click', () => {
+            prjState.changeState();
+        });
+        
         prjState.addListener((items => {
-            this.assignedItems = items.filter(item => this.type === 'available' ? !item.selected : item.selected);
+            this.listItems = items.filter(item => item.state === this.type);
+            console.log(this.listItems);
             this.itemsRender();
         }))
     }
@@ -178,15 +204,11 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
     }
 
     private itemsRender() {
-        if (this.type === 'available') {
-            const listEl = <HTMLUListElement>document.getElementById(`${this.type}-items-list`);
-            listEl.innerHTML = '';
-            for (const prjItem of this.assignedItems) {
-                new Render(this.element.querySelector('ul')!.id, prjItem);
-            }
+        const listEl = <HTMLUListElement>document.getElementById(`${this.type}-items-list`);
+        listEl.innerHTML = '';
+        for (const prjItem of this.listItems) {
+            new Render(this.element.querySelector('ul')!.id, prjItem);
         }
-
-
     }
 
     dragLeaveHandler = (_: DragEvent) => {
@@ -206,6 +228,8 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
     }
 }
 
+
+
 const mock = {
     id: 1,
     title: "toto",
@@ -218,7 +242,7 @@ const mockedList = new List(
     "available"
 )
 const mockedListSelected = new List(
-    "selected"
+    "picked"
 )
 
 class ItemTest {
