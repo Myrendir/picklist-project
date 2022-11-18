@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picklist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+</head>
+<body>
+<template id="item">
+    <li draggable="true">
+        <h2 class="title"></h2>
+        <p class="description"></p>
+    </li>
+</template>
+
+<template id="list">
+    <section class="items">
+        <label>
+            <input type="text" class="filter" placeholder="Search by name">
+        </label>
+        <header>
+            <h2></h2>
+        </header>
+        <button>Move right</button>
+        <button>Move left</button>
+        <ul></ul>
+    </section>
+</template>
+
+<div id="app"></div>
+
+<script src="dist/index.js"></script>
+</body>
+</html>

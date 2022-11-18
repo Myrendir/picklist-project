@@ -47,8 +47,6 @@ class ListenerState<T> {
 }
 
 
-
-
 class State extends ListenerState<Item> {
     private listItems: Item[] = [];
     private static instance: State;
@@ -89,7 +87,9 @@ class State extends ListenerState<Item> {
         }
     }
 }
+
 const prjState = State.getInstance();
+
 class ItemStyle {
     styleClass: string;
     value: string;
@@ -106,7 +106,7 @@ class Item {
     element: any;
     selected: boolean;
 
-    constructor(index: number, element: any) {
+    constructor(element: any, index: number) {
         this.id = new Date().getTime();
         this.id += index;
         this.element = element;
@@ -122,7 +122,7 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
     private item: Item;
 
     constructor(hostId: string, item: Item) {
-        super('itemList', hostId, false)
+        super('item', hostId, false)
         this.item = item;
 
         this.configure();
@@ -152,26 +152,41 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
 
 class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget {
 
+    assignedItems: Item[];
+
+    constructor(private type: 'available' | 'selected') {
+        super('list', 'app', false, `${type}-items`);
+        this.assignedItems = [];
+        this.configure();
+        this.contentRender();
+    }
+
     configure() {
         this.element.addEventListener('dragover', this.dragOverHandler);
         this.element.addEventListener('dragleave', this.dragLeaveHandler);
         this.element.addEventListener('drop', this.dropHandler);
 
-
+        prjState.addListener((items => {
+            this.assignedItems = items.filter(item => this.type === 'available' ? !item.selected : item.selected);
+            this.itemsRender();
+        }))
     }
 
     contentRender() {
-        // const listId = `${this.type}-items-list`;
-        // this.element.querySelector('ul')!.id = listId;
-        // this.element.querySelector('h2')!.innerText = `${this.type.toUpperCase()} ITEMS`;
+        this.element.querySelector('ul')!.id = `${this.type}-items-list`;
+        this.element.querySelector('h2')!.innerText = `${this.type.toUpperCase()} ITEMS`;
     }
 
-    private projectsRender() {
-        // const listEl = <HTMLUListElement>document.getElementById(`${this.type}-items-list`);
-        // listEl.innerHTML = '';
-        // for (const prjItem of this.assignedProjects) {
-        //     new Item(this.element.querySelector('ul')!.id, prjItem);
-        // }
+    private itemsRender() {
+        if (this.type === 'available') {
+            const listEl = <HTMLUListElement>document.getElementById(`${this.type}-items-list`);
+            listEl.innerHTML = '';
+            for (const prjItem of this.assignedItems) {
+                new Render(this.element.querySelector('ul')!.id, prjItem);
+            }
+        }
+
+
     }
 
     dragLeaveHandler = (_: DragEvent) => {
@@ -189,7 +204,33 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
 
     dropHandler(event: DragEvent) {
     }
-
 }
 
+const mock = {
+    id: 1,
+    title: "toto",
+    description: "michel",
+    value: 5,
+    type: 'text'
+}
 
+const mockedList = new List(
+    "available"
+)
+const mockedListSelected = new List(
+    "selected"
+)
+
+class ItemTest {
+    constructor(public id: string, public title: string, public description: string, public people: number, public status: 0) { }
+}
+
+const listData: ItemTest[] = [];
+
+for (let i = 0; i < 10; i++) {
+    let test = new ItemTest(i.toString(), Math.random().toString()+' test', 'test', i+20, 0);
+    listData.push(test);
+    // prjState.addItem(test);
+}
+
+prjState.setList(listData);
