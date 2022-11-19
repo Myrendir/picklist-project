@@ -27,10 +27,13 @@
       flex-direction: row;
       flex-wrap: wrap;
       justify-content: space-around;
+      padding-top: 5rem;
+      padding-bottom: 5rem;
     }
     .items {
-      border: 1px solid #000;
+      border: 1px solid #dee2e6;
       border-radius: 5px;
+      width: 40rem;
     }
     .filter {
       width: fit-content;
@@ -38,21 +41,16 @@
     .listgroup {
       list-style-type: none;
       padding: 2rem;
-      /* box-shadow: 16px 23px 40px 5px rgba(99, 69, 69, 0.79);
-      -webkit-box-shadow: 16px 23px 40px 5px rgba(99, 69, 69, 0.79);
-      -moz-box-shadow: 16px 23px 40px 5px rgba(99, 69, 69, 0.79); */
     }
     .listItem:hover {
-      background-color: rgb(178, 179, 182);
+      background-color: #e9ecef;
     }
     .listItem:active {
       border: 1px solid rgb(14, 108, 139);
     }
     .listItem {
       margin-bottom: 2rem;
-      box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-      -webkit-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-      -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
+      box-shadow: 15px 13px 11px 5px rgba(0, 0, 0, 0.1);
       border-radius: 20px;
     }
     .itemsList {
@@ -60,8 +58,9 @@
       height: 50rem;
       overflow-y: scroll;
     }
-    .test {
-      background-color: red;
+    .selected {
+      border: 1px solid #0356c2;
+      background-color: #EFF6FF;
     }
   </style>
   <body>
@@ -69,42 +68,59 @@
       <div class="listItem">
         <ul class="listgroup">
           <li draggable="true">
-            <h2 class="title" style="text-align: center"></h2>
+            <h2 class="title"></h2>
             <p class="description"></p>
           </li>
         </ul>
       </div>
     </template>
-
     <template id="list">
       <section class="items">
-        <header style="border: 1px solid #000">
-          <h2 style="text-align: center; background-color: #f8f9fa"></h2>
+        <header
+          style="
+            border: 1px solid #dee2e6;
+            height: 3rem;
+            background-color: #f8f9fa;
+          "
+        >
+          <h2
+            style="
+              text-align: center;
+
+              font-size: 1.2rem;
+            "
+          ></h2>
         </header>
         <div style="display: flex">
           <div style="width: 50%">
-            <button class="move-right" style="width: 100%; background-color: #3B82F6;">Move right</button>
+            <button
+              type="button"
+              class="btn btn-outline-info move-right"
+              style="width: 100%"
+            >
+              Move right
+            </button>
           </div>
           <div style="width: 50%">
-            <button class="move-left" style="width: 100%">Move left</button>
+            <button
+              type="button"
+              class="btn btn-outline-primary move-left"
+              style="width: 100%"
+            >
+              Move left
+            </button>
           </div>
         </div>
-        <div
-          style="
-            border: 1px solid #000;
-            height: 6rem;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-          "
-        >
+        <div style="border: 1px solid #dee2e6; height: 6rem; margin-top: 2rem">
           <div
             style="padding-left: 2rem; padding-right: 2rem; padding-top: 1.5rem"
           >
             <input
-              type="text"
-              class="filter"
-              placeholder="Search by name"
-              style="width: 100%; border-radius: 5px; height: 3rem"
+              class="form-control mr-sm-2 filter"
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+              style="width: 100%"
             />
           </div>
         </div>

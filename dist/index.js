@@ -25,7 +25,7 @@ var Component = /** @class */ (function () {
         this.attach(insertAtStart);
     }
     Component.prototype.attach = function (insert) {
-        this.renderElem.insertAdjacentElement(insert ? 'afterbegin' : 'beforeend', this.element);
+        this.renderElem.insertAdjacentElement(insert ? "afterbegin" : "beforeend", this.element);
     };
     return Component;
 }());
@@ -42,7 +42,6 @@ var State = /** @class */ (function (_super) {
     __extends(State, _super);
     function State() {
         var _this = _super.call(this) || this;
-        _this.listItems = [];
         _this.listItems = [];
         return _this;
     }
@@ -116,9 +115,9 @@ var Item = /** @class */ (function () {
 var Render = /** @class */ (function (_super) {
     __extends(Render, _super);
     function Render(hostId, item) {
-        var _this = _super.call(this, 'item', hostId, false) || this;
+        var _this = _super.call(this, "item", hostId, false) || this;
         _this.dragEndHandler = function (_) {
-            console.log('DragEnd');
+            console.log("DragEnd");
         };
         _this.item = item;
         _this.configure();
@@ -127,36 +126,49 @@ var Render = /** @class */ (function (_super) {
     }
     Render.prototype.configure = function () {
         var _this = this;
-        this.element.addEventListener('dragstart', this.dragStartHandler);
-        this.element.addEventListener('dragend', this.dragEndHandler);
-        this.element.addEventListener('click', function () { prjState.changeItem([_this.item.id]); console.log(_this.item); });
+        this.element.addEventListener("dragstart", this.dragStartHandler);
+        this.element.addEventListener("dragend", this.dragEndHandler);
+        this.element.addEventListener("click", function () {
+            prjState.changeItem([_this.item.id]);
+            if (_this.item.selected) {
+                console.log("ici", _this.item.selected);
+                _this.element.classList.add("selected");
+            }
+            else
+                _this.element.classList.remove("selected");
+        });
     };
     Render.prototype.contentRender = function () {
-        this.element.querySelector('h2').innerText = this.item.element.title;
-        this.element.querySelector('p').innerText = this.item.element.description;
+        this.element.querySelector("h2").innerText = this.item.element.title;
+        this.element.querySelector("p").innerText = this.item.element.description;
     };
     Render.prototype.dragStartHandler = function (event) {
-        event.dataTransfer.setData('text/plain', this.item.id.toString());
-        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData("text/plain", this.item.id.toString());
+        event.dataTransfer.effectAllowed = "move";
     };
     return Render;
 }(Component));
 var List = /** @class */ (function (_super) {
     __extends(List, _super);
     function List(type) {
-        var _this = _super.call(this, 'list', 'app', false, "".concat(type, "-items")) || this;
+        var _this = _super.call(this, "list", "app", false, "".concat(type, "-items")) || this;
         _this.type = type;
         _this.listItems = [];
-        _this.dragLeaveHandler = function (_) {
-            var listEl = _this.element.querySelector('ul');
-            listEl.classList.remove('droppable');
-        };
         _this.dragOverHandler = function (event) {
-            if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+            if (event.dataTransfer && event.dataTransfer.types[0] === "text/plain") {
                 event.preventDefault();
-                var listEl = _this.element.querySelector('ul');
-                listEl.classList.add('droppable');
+                var listEl = _this.element.querySelector("ul");
+                listEl.classList.add("droppable");
             }
+        };
+        _this.dragLeaveHandler = function (_) {
+            var listEl = _this.element.querySelector("ul");
+            listEl.classList.remove("droppable");
+        };
+        _this.dropHandler = function (event) {
+            var prjId = event.dataTransfer.getData("text/plain");
+            console.log("ici" + prjId);
+            prjState.changeItem([+prjId]);
         };
         _this.configure();
         _this.contentRender();
@@ -165,31 +177,29 @@ var List = /** @class */ (function (_super) {
     List.prototype.configure = function () {
         var _this = this;
         var _a;
-        this.element.addEventListener('dragover', this.dragOverHandler);
-        this.element.addEventListener('dragleave', this.dragLeaveHandler);
-        this.element.addEventListener('drop', this.dropHandler);
-        (_a = this.element.querySelector('.move-right')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', function () {
+        this.element.addEventListener("dragover", this.dragOverHandler);
+        this.element.addEventListener("dragleave", this.dragLeaveHandler);
+        this.element.addEventListener("drop", this.dropHandler);
+        (_a = this.element.querySelector(".move-right")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", function () {
             prjState.changeState();
         });
-        prjState.addListener((function (items) {
+        prjState.addListener(function (items) {
             _this.listItems = items.filter(function (item) { return item.state === _this.type; });
-            console.log(_this.listItems);
+            // console.log(this.listItems);
             _this.itemsRender();
-        }));
+        });
     };
     List.prototype.contentRender = function () {
-        this.element.querySelector('ul').id = "".concat(this.type, "-items-list");
-        this.element.querySelector('h2').innerText = "".concat(this.type.toUpperCase(), " ITEMS");
+        this.element.querySelector("ul").id = "".concat(this.type, "-items-list");
+        this.element.querySelector("h2").innerText = "".concat(this.type.toUpperCase(), " ITEMS");
     };
     List.prototype.itemsRender = function () {
-        var listEl = document.getElementById("".concat(this.type, "-items-list"));
-        listEl.innerHTML = '';
+        var listEl = (document.getElementById("".concat(this.type, "-items-list")));
+        listEl.innerHTML = "";
         for (var _i = 0, _a = this.listItems; _i < _a.length; _i++) {
             var prjItem = _a[_i];
-            new Render(this.element.querySelector('ul').id, prjItem);
+            new Render(this.element.querySelector("ul").id, prjItem);
         }
-    };
-    List.prototype.dropHandler = function (event) {
     };
     return List;
 }(Component));
@@ -198,7 +208,7 @@ var mock = {
     title: "toto",
     description: "michel",
     value: 5,
-    type: 'text'
+    type: "text",
 };
 var mockedList = new List("available");
 var mockedListSelected = new List("picked");
@@ -213,8 +223,8 @@ var ItemTest = /** @class */ (function () {
     return ItemTest;
 }());
 var listData = [];
-for (var i = 0; i < 10; i++) {
-    var test = new ItemTest(i.toString(), Math.random().toString() + ' test', 'test', i + 20, 0);
+for (var i = 0; i < 20; i++) {
+    var test = new ItemTest(i.toString(), "Title", "Description", i + 20, 0);
     listData.push(test);
     // prjState.addItem(test);
 }
