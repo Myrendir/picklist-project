@@ -63,9 +63,10 @@
       overflow-y: scroll;
     }
     .selected {
-      border: 1px solid #0356c2;
+      border: 2px dotted;
       background-color: #EFF6FF;
     }
+
   </style>
   <body>
     <template id="item" style="background-color: aqua">
@@ -96,6 +97,10 @@
               font-size: 2rem;
             "
           ></h2>
+<template id="item">
+    <li draggable="true">
+    </li>
+</template>
         </header>
         <div style="text-align: center;">
           <!-- <div style="width: 50%">
