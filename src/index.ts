@@ -116,7 +116,6 @@ class State extends ListenerState<Item> {
         }
     }
   }
-}
 
 const itmState = State.getInstance();
 
@@ -268,7 +267,7 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
     dropHandler(event: DragEvent) {
     }
   }
-}
+
 
 const mockedList = new List(
     "available"
