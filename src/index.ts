@@ -68,12 +68,13 @@ class State extends ListenerState<Item> {
     }
 
     setList(listItem: any[]) {
-        this.listItems = listItem.map((item, index) => new Item(item, index));
-        this.updateListeners();
+        listItem.map((element) => {
+            this.addItem(element[0], element[1])
+        })
     }
 
-    addItem(listItem: any) {
-        this.listItems.push(new Item(listItem, this.listItems.length - 1));
+    addItem(listItem: any, style: any) {
+        this.listItems.push(new Item(listItem, this.listItems.length - 1, style));
         this.updateListeners();
     }
 
@@ -108,30 +109,21 @@ class State extends ListenerState<Item> {
     }
 }
 
-const prjState = State.getInstance();
-
-class ItemStyle {
-    styleClass: string;
-    value: string;
-
-    constructor(styleClass: string, value: string) {
-        this.styleClass = styleClass;
-        this.value = value;
-    }
-}
-
+const itmState = State.getInstance();
 
 class Item {
     id: number;
     element: any;
     selected: boolean;
     state: "available" | "picked" = "available";
+    styleElements: object;
 
-    constructor(element: any, index: number) {
+    constructor(element: any, index: number, styleElements: object = {}) {
         this.id = new Date().getTime();
         this.id += index;
         this.element = element;
         this.selected = false;
+        this.styleElements = styleElements;
     }
 
     handleSelect() {
@@ -150,11 +142,12 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
         this.contentRender();
     }
 
+
     configure() {
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
         this.element.addEventListener('click', () => {
-            prjState.changeItem([this.item.id]);
+            itmState.changeItem([this.item.id]);
         });
     }
 
@@ -163,8 +156,15 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
             this.element.classList.add("selected");
         }
 
-        this.element.querySelector('h2')!.innerText = this.item.element.title;
-        this.element.querySelector('p')!.innerText = this.item.element.description;
+        Object.entries(this.item.styleElements).forEach(([key, value]) => {
+            let tag = document.createElement(value.htmlTag);
+            tag.classList.add(key.toString());
+            Object.entries(value.cssProperties).forEach(([key, value]) => {
+                tag.style[key] = value;
+            })
+            tag.append(this.item.element[key]);
+            this.element.append(tag);
+        })
     }
 
     dragEndHandler = (_: DragEvent) => {
@@ -197,10 +197,10 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
 
         this.element.querySelector('.filter')!.addEventListener('change', this.filterItems.bind(this));
         this.element.querySelector('.move-right')?.addEventListener('click', () => {
-            prjState.changeState();
+            itmState.changeState();
         });
 
-        prjState.addListener((items => {
+        itmState.addListener((items => {
             this.listItems = items.filter(item => item.state === this.type);
             this.filteredList = items.filter(item => item.state === this.type);
             this.itemsRender();
@@ -260,33 +260,48 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
     }
 }
 
-
-const mock = {
-    id: 1,
-    title: "toto",
-    description: "michel",
-    value: 5,
-    type: 'text'
-}
-
 const mockedList = new List(
     "available"
 )
-const mockedListSelected = new List(
+const mockedListPicked = new List(
     "picked"
 )
 
-class ItemTest {
-    constructor(public id: string, public title: string, public description: string, public people: number, public status: 0) {
+enum statusCard {
+    Instock,
+    Lowstock
+}
+
+class OptionStyle {
+    htmlTag: string;
+    cssProperties: object;
+
+    constructor(htmlTag: string, cssProperties: object = {}) {
+        this.htmlTag = htmlTag;
+        this.cssProperties = cssProperties;
     }
 }
 
-const listData: ItemTest[] = [];
-
-for (let i = 0; i < 10; i++) {
-    let test = new ItemTest(i.toString(), ++i + 'test', 'test', i + 20, 0);
-    listData.push(test);
-    // prjState.addItem(test);
+class Card {
+    constructor(public index: string, public title: string, public tag: string, public amount: string, public status: statusCard) {
+    }
 }
 
-prjState.setList(listData);
+const styleCard = {
+    title: new OptionStyle("h2", {
+        fontWeight: "bolder"
+    }),
+    tag: new OptionStyle("p"),
+    amount: new OptionStyle("p"),
+    status: new OptionStyle("p", {
+        color: statusCard.Instock ? 'green' : 'yellow'
+    })
+}
+const listCards: any[] = [];
+
+listCards.push([new Card("1", "Bamboo Watch", "Accessories", "$65", statusCard.Instock), styleCard]);
+listCards.push([new Card("2", "Black Watch", "Accessories", "$72", statusCard.Instock), styleCard]);
+listCards.push([new Card("3", "Blue Band", "Fitness", "$79", statusCard.Lowstock), styleCard]);
+listCards.push([new Card("4", "Blue T-Shirt", "Clothin", "$29", statusCard.Instock), styleCard]);
+
+itmState.setList(listCards);
