@@ -153,7 +153,7 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
     configure() {
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
-        this.element.addEventListener('click', () => { prjState.changeItem([this.item.id]); console.log(this.item) });
+        this.element.addEventListener('click', () => { prjState.changeItem([this.item.id]); });
     }
 
     contentRender() {
@@ -166,7 +166,9 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
     }
 
     dragStartHandler(event: DragEvent) {
-        event.dataTransfer!.setData('text/plain', this.item.id.toString());
+        console.log(this.item)
+        console.log(event)
+        //event.dataTransfer!.setData('text/plain', this.item.id.toString());
         event.dataTransfer!.effectAllowed = 'move';
     }
 

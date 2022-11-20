@@ -24,13 +24,16 @@
     #app {
       display: flex;
       width: 100%;
+      height: 100vh;
       flex-direction: row;
       flex-wrap: wrap;
       justify-content: space-around;
+      align-items: center;
     }
     .items {
-      border: 1px solid #000;
-      border-radius: 5px;
+        background-color: #EEE;
+      border: 1px solid #DDD;
+      width: 40%;
     }
     .filter {
       width: fit-content;
@@ -50,13 +53,13 @@
     }
     .listItem {
       margin-bottom: 2rem;
-      box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-      -webkit-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-      -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-      border-radius: 20px;
+      box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.75);
+      -webkit-box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.75);
+      -moz-box-shadow: 0px 0px 6px 0px rgba(0, 0, 0, 0.75);
+      border-radius: 5px;
     }
     .itemsList {
-      padding: 2rem;
+      padding: 1rem 2rem;
       height: 50rem;
       overflow-y: scroll;
     }
@@ -78,23 +81,20 @@
 
     <template id="list">
       <section class="items">
-        <header style="border: 1px solid #000">
-          <h2 style="text-align: center; background-color: #f8f9fa"></h2>
+        <header style="height: 80px; margin-bottom: 20px;">
+          <h2 style="text-align: center; background-color: #f8f9fa; line-height: 2; border-bottom: 1px solid #DDD; height: 100%;"></h2>
         </header>
         <div style="display: flex">
-          <div style="width: 50%">
-            <button class="move-right" style="width: 100%; background-color: #3B82F6;">Move right</button>
-          </div>
-          <div style="width: 50%">
-            <button class="move-left" style="width: 100%">Move left</button>
+          <div style="width: 100%; text-align: center;">
+            <button class="move-right" style="width: 75%; font-weight: 600; background-color: #5b86fd; border: none; font-variant: small-caps; height: 45px; border-radius: 10px;">Move</button>
           </div>
         </div>
         <div
           style="
-            border: 1px solid #000;
+            border: 1px solid #DDD;
             height: 6rem;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
+            margin-top: 20px;
+            margin-bottom: 20px;
           "
         >
           <div

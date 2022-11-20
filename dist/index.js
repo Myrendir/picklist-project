@@ -129,14 +129,16 @@ var Render = /** @class */ (function (_super) {
         var _this = this;
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
-        this.element.addEventListener('click', function () { prjState.changeItem([_this.item.id]); console.log(_this.item); });
+        this.element.addEventListener('click', function () { prjState.changeItem([_this.item.id]); });
     };
     Render.prototype.contentRender = function () {
         this.element.querySelector('h2').innerText = this.item.element.title;
         this.element.querySelector('p').innerText = this.item.element.description;
     };
     Render.prototype.dragStartHandler = function (event) {
-        event.dataTransfer.setData('text/plain', this.item.id.toString());
+        console.log(this.item);
+        console.log(event);
+        //event.dataTransfer!.setData('text/plain', this.item.id.toString());
         event.dataTransfer.effectAllowed = 'move';
     };
     return Render;
