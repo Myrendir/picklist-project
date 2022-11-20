@@ -1,99 +1,58 @@
-type Listener<T> = (items: T[]) => void;
-
-interface Draggable {
-  dragStartHandler(event: DragEvent): void;
-
-  dragEndHandler(event: DragEvent): void;
+"use strict";
+class Component {
+    constructor(templateId, renderElemId, insertAtStart, newElemId) {
+        this.templateElem = document.getElementById(templateId);
+        this.renderElem = document.getElementById(renderElemId);
+        const importedNode = document.importNode(this.templateElem.content, true);
+        this.element = importedNode.firstElementChild;
+        if (newElemId)
+            this.element.id = newElemId;
+        this.attach(insertAtStart);
+    }
+    attach(insert) {
+        this.renderElem.insertAdjacentElement(insert ? "afterbegin" : "beforeend", this.element);
+    }
 }
-
-interface DragTarget {
-  dragOverHandler(event: DragEvent): void;
-
-  dropHandler(event: DragEvent): void;
-
-  dragLeaveHandler(event: DragEvent): void;
+class ListenerState {
+    constructor() {
+        this.listeners = [];
+    }
+    addListener(listenerFn) {
+        this.listeners.push(listenerFn);
+    }
 }
-
-abstract class Component<T extends HTMLElement, U extends HTMLElement> {
-  templateElem: HTMLTemplateElement;
-  renderElem: T;
-  element: U;
-
-  constructor(
-    templateId: string,
-    renderElemId: string,
-    insertAtStart: boolean,
-    newElemId?: string
-  ) {
-    this.templateElem = document.getElementById(
-      templateId
-    )! as HTMLTemplateElement;
-    this.renderElem = document.getElementById(renderElemId)! as T;
-    const importedNode = document.importNode(this.templateElem.content, true);
-    this.element = importedNode.firstElementChild as U;
-    if (newElemId) this.element.id = newElemId;
-    this.attach(insertAtStart);
-  }
-
-  private attach(insert: boolean) {
-    this.renderElem.insertAdjacentElement(
-      insert ? "afterbegin" : "beforeend",
-      this.element
-    );
-  }
-
-  abstract configure(): void;
-
-  abstract contentRender(): void;
-}
-
-class ListenerState<T> {
-  protected listeners: Listener<T>[] = [];
-
-  addListener(listenerFn: Listener<T>) {
-    this.listeners.push(listenerFn);
-  }
-}
-
-class State extends ListenerState<Item> {
-    private listItems: Item[] = [];
-    private static instance: State;
-
+class State extends ListenerState {
     constructor() {
         super();
         this.listItems = [];
+        this.listItems = [];
     }
-
     static getInstance() {
         if (this.instance)
             return this.instance;
         this.instance = new State();
         return this.instance;
     }
-
     getList() {
         return this.listItems;
     }
-
-    setList(listItem: any[]) {
+    setList(listItem) {
         listItem.map((element) => {
-            this.addItem(element[0], element[1])
-        })
+            this.addItem(element[0], element[1]);
+        });
     }
-
-    addItem(listItem: any, style: any) {
+    addItem(listItem, style) {
         this.listItems.push(new Item(listItem, this.listItems.length - 1, style));
         this.updateListeners();
     }
-
-    changeItem(itemId: number[]) {
+    changeItem(itemId) {
         this.listItems = this.listItems.map(r => {
-            if (itemId.includes(r.id)) r.handleSelect();
+            if (itemId.includes(r.id))
+                r.handleSelect();
             return r;
         });
         this.updateListeners();
     }
-
     changeState() {
         this.listItems = this.listItems.map(item => {
             if (item.selected) {
@@ -101,56 +60,42 @@ class State extends ListenerState<Item> {
                     item.state = "picked";
                 else
                     item.state = "available";
-
                 item.selected = false;
             }
             return item;
-        })
-
+        });
         this.updateListeners();
     }
-
     updateListeners() {
         for (const listenerFn of this.listeners) {
             listenerFn(this.listItems.slice());
         }
     }
-  }
-
+}
 const itmState = State.getInstance();
-
 class Item {
-    id: number;
-    element: any;
-    selected: boolean;
-    state: "available" | "picked" = "available";
-    styleElements: object;
-
-    constructor(element: any, index: number, styleElements: object = {}) {
+    constructor(element, index, styleElements = {}) {
+        this.state = "available";
         this.id = new Date().getTime();
         this.id += index;
         this.element = element;
         this.selected = false;
         this.styleElements = styleElements;
     }
-
     handleSelect() {
         this.selected = !this.selected;
     }
 }
-
-class Render extends Component<HTMLUListElement, HTMLLIElement> implements Draggable {
-    private item: Item;
-
-    constructor(hostId: string, item: Item) {
-        super('item', hostId, false)
+class Render extends Component {
+    constructor(hostId, item) {
+        super('item', hostId, false);
+        this.dragEndHandler = (_) => {
+            console.log('DragEnd');
+        };
         this.item = item;
-
         this.configure();
         this.contentRender();
     }
-
-
     configure() {
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
@@ -158,144 +103,118 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
             itmState.changeItem([this.item.id]);
         });
     }
-
     contentRender() {
         if (this.item.selected) {
             this.element.classList.add("selected");
         }
-
         Object.entries(this.item.styleElements).forEach(([key, value]) => {
             let tag = document.createElement(value.htmlTag);
             tag.classList.add(key.toString());
             Object.entries(value.cssProperties).forEach(([key, value]) => {
                 tag.style[key] = value;
-            })
+            });
             tag.append(this.item.element[key]);
             this.element.append(tag);
-        })
+        });
     }
-
-    dragEndHandler = (_: DragEvent) => {
-        console.log('DragEnd');
+    dragStartHandler(event) {
+        event.dataTransfer.setData('text/plain', this.item.id.toString());
+        event.dataTransfer.effectAllowed = 'move';
     }
-
-    dragStartHandler(event: DragEvent) {
-        event.dataTransfer!.setData('text/plain', this.item.id.toString());
-        event.dataTransfer!.effectAllowed = 'move';
-    }
-
 }
-
-class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget {
-
-    listItems: Item[] = [];
-    filteredList: Item[] = [];
-    stringFilter: string = "";
-
-    constructor(private type: 'available' | 'picked') {
+class List extends Component {
+    constructor(type) {
         super('list', 'app', false, `${type}-items`);
+        this.type = type;
+        this.listItems = [];
+        this.filteredList = [];
+        this.stringFilter = "";
+        this.dragLeaveHandler = (_) => {
+            const listEl = this.element.querySelector('ul');
+            listEl.classList.remove('droppable');
+        };
+        this.dragOverHandler = (event) => {
+            if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+                event.preventDefault();
+                const listEl = this.element.querySelector('ul');
+                listEl.classList.add('droppable');
+            }
+        };
         this.configure();
         this.contentRender();
     }
-
     configure() {
+        var _a;
         this.element.addEventListener('dragover', this.dragOverHandler);
         this.element.addEventListener('dragleave', this.dragLeaveHandler);
         this.element.addEventListener('drop', this.dropHandler);
-
-        this.element.querySelector('.filter')!.addEventListener('change', this.filterItems.bind(this));
-        this.element.querySelector('.move-right')?.addEventListener('click', () => {
+        this.element.querySelector('.filter').addEventListener('change', this.filterItems.bind(this));
+        (_a = this.element.querySelector('.move-right')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
             itmState.changeState();
         });
-
         itmState.addListener((items => {
             this.listItems = items.filter(item => item.state === this.type);
             this.filteredList = items.filter(item => item.state === this.type);
             this.itemsRender();
-        }))
+        }));
     }
-
     contentRender() {
-        this.element.querySelector('ul')!.id = `${this.type}-items-list`;
-        this.element.querySelector('h2')!.innerText = `${this.type.toUpperCase()} ITEMS`;
+        this.element.querySelector('ul').id = `${this.type}-items-list`;
+        this.element.querySelector('h2').innerText = `${this.type.toUpperCase()} ITEMS`;
     }
-
-    private itemsRender() {
-        const listEl = <HTMLUListElement>document.getElementById(`${this.type}-items-list`);
+    itemsRender() {
+        const listEl = document.getElementById(`${this.type}-items-list`);
         listEl.innerHTML = '';
         const render = this.stringFilter !== "" ? this.filteredList : this.listItems;
         for (const [index, prjItem] of render.entries()) {
-            new Render(this.element.querySelector('ul')!.id, prjItem);
+            new Render(this.element.querySelector('ul').id, prjItem);
         }
     }
-
-    private filterItems(e: Event) {
+    filterItems(e) {
         e.preventDefault();
-
-        const target = e.target as HTMLInputElement;
+        const target = e.target;
         this.stringFilter = target.value.toString().toLowerCase();
-
         if (this.stringFilter !== "") {
             this.filteredList = this.listItems.filter(item => {
                 for (const value of Object.entries(item.element)) {
-                    if (this.filter(value[1])) return true;
+                    if (this.filter(value[1]))
+                        return true;
                 }
-            })
-        } else {
+            });
+        }
+        else {
             this.filteredList = this.listItems;
         }
         this.itemsRender();
     }
-
-    private filter(value: any) {
+    filter(value) {
         return value.toString().toLowerCase().includes(this.stringFilter);
     }
-
-    dragLeaveHandler = (_: DragEvent) => {
-        const listEl = this.element.querySelector('ul')!;
-        listEl.classList.remove('droppable');
+    dropHandler(event) {
     }
-
-    dragOverHandler = (event: DragEvent) => {
-        if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
-            event.preventDefault();
-            const listEl = this.element.querySelector('ul')!;
-            listEl.classList.add('droppable');
-        }
-    }
-
-    dropHandler(event: DragEvent) {
-    }
-  }
-
-
-const mockedList = new List(
-    "available"
-)
-const mockedListPicked = new List(
-    "picked"
-)
-
-enum statusCard {
-    Instock,
-    Lowstock
 }
-
+const mockedList = new List("available");
+const mockedListPicked = new List("picked");
+var statusCard;
+(function (statusCard) {
+    statusCard[statusCard["Instock"] = 0] = "Instock";
+    statusCard[statusCard["Lowstock"] = 1] = "Lowstock";
+})(statusCard || (statusCard = {}));
 class OptionStyle {
-    htmlTag: string;
-    cssProperties: object;
-
-    constructor(htmlTag: string, cssProperties: object = {}) {
+    constructor(htmlTag, cssProperties = {}) {
         this.htmlTag = htmlTag;
         this.cssProperties = cssProperties;
     }
 }
-
 class Card {
-    constructor(public index: string, public title: string, public tag: string, public amount: string, public status: statusCard) {
+    constructor(index, title, tag, amount, status) {
+        this.index = index;
+        this.title = title;
+        this.tag = tag;
+        this.amount = amount;
+        this.status = status;
     }
 }
-
 const styleCard = {
     title: new OptionStyle("h2", {
         fontWeight: "bolder"
@@ -305,12 +224,10 @@ const styleCard = {
     status: new OptionStyle("p", {
         color: statusCard.Instock ? 'green' : 'yellow'
     })
-}
-const listCards: any[] = [];
-
+};
+const listCards = [];
 listCards.push([new Card("1", "Bamboo Watch", "Accessories", "$65", statusCard.Instock), styleCard]);
 listCards.push([new Card("2", "Black Watch", "Accessories", "$72", statusCard.Instock), styleCard]);
 listCards.push([new Card("3", "Blue Band", "Fitness", "$79", statusCard.Lowstock), styleCard]);
 listCards.push([new Card("4", "Blue T-Shirt", "Clothin", "$29", statusCard.Instock), styleCard]);
-
 itmState.setList(listCards);
