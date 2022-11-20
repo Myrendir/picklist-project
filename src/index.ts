@@ -88,11 +88,11 @@ class State extends ListenerState<Item> {
     changeState() {
         this.listItems = this.listItems.map(item => {
             if (item.selected) {
-                if(item.state === "available")
+                if (item.state === "available")
                     item.state = "picked";
                 else
                     item.state = "available";
-                
+
                 item.selected = false;
             }
             return item;
@@ -125,7 +125,7 @@ class Item {
     id: number;
     element: any;
     selected: boolean;
-    state: "available"|"picked" = "available";
+    state: "available" | "picked" = "available";
 
     constructor(element: any, index: number) {
         this.id = new Date().getTime();
@@ -153,10 +153,16 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
     configure() {
         this.element.addEventListener('dragstart', this.dragStartHandler);
         this.element.addEventListener('dragend', this.dragEndHandler);
-        this.element.addEventListener('click', () => { prjState.changeItem([this.item.id]); console.log(this.item) });
+        this.element.addEventListener('click', () => {
+            prjState.changeItem([this.item.id]);
+        });
     }
 
     contentRender() {
+        if (this.item.selected) {
+            this.element.classList.add("selected");
+        }
+
         this.element.querySelector('h2')!.innerText = this.item.element.title;
         this.element.querySelector('p')!.innerText = this.item.element.description;
     }
@@ -175,6 +181,8 @@ class Render extends Component<HTMLUListElement, HTMLLIElement> implements Dragg
 class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget {
 
     listItems: Item[] = [];
+    filteredList: Item[] = [];
+    stringFilter: string = "";
 
     constructor(private type: 'available' | 'picked') {
         super('list', 'app', false, `${type}-items`);
@@ -187,13 +195,14 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
         this.element.addEventListener('dragleave', this.dragLeaveHandler);
         this.element.addEventListener('drop', this.dropHandler);
 
+        this.element.querySelector('.filter')!.addEventListener('change', this.filterItems.bind(this));
         this.element.querySelector('.move-right')?.addEventListener('click', () => {
             prjState.changeState();
         });
-        
+
         prjState.addListener((items => {
             this.listItems = items.filter(item => item.state === this.type);
-            console.log(this.listItems);
+            this.filteredList = items.filter(item => item.state === this.type);
             this.itemsRender();
         }))
     }
@@ -206,9 +215,32 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
     private itemsRender() {
         const listEl = <HTMLUListElement>document.getElementById(`${this.type}-items-list`);
         listEl.innerHTML = '';
-        for (const prjItem of this.listItems) {
+        const render = this.stringFilter !== "" ? this.filteredList : this.listItems;
+        for (const [index, prjItem] of render.entries()) {
             new Render(this.element.querySelector('ul')!.id, prjItem);
         }
+    }
+
+    private filterItems(e: Event) {
+        e.preventDefault();
+
+        const target = e.target as HTMLInputElement;
+        this.stringFilter = target.value.toString().toLowerCase();
+
+        if (this.stringFilter !== "") {
+            this.filteredList = this.listItems.filter(item => {
+                for (const value of Object.entries(item.element)) {
+                    if (this.filter(value[1])) return true;
+                }
+            })
+        } else {
+            this.filteredList = this.listItems;
+        }
+        this.itemsRender();
+    }
+
+    private filter(value: any) {
+        return value.toString().toLowerCase().includes(this.stringFilter);
     }
 
     dragLeaveHandler = (_: DragEvent) => {
@@ -229,7 +261,6 @@ class List extends Component<HTMLDivElement, HTMLElement> implements DragTarget 
 }
 
 
-
 const mock = {
     id: 1,
     title: "toto",
@@ -246,13 +277,14 @@ const mockedListSelected = new List(
 )
 
 class ItemTest {
-    constructor(public id: string, public title: string, public description: string, public people: number, public status: 0) { }
+    constructor(public id: string, public title: string, public description: string, public people: number, public status: 0) {
+    }
 }
 
 const listData: ItemTest[] = [];
 
 for (let i = 0; i < 10; i++) {
-    let test = new ItemTest(i.toString(), Math.random().toString()+' test', 'test', i+20, 0);
+    let test = new ItemTest(i.toString(), ++i + 'test', 'test', i + 20, 0);
     listData.push(test);
     // prjState.addItem(test);
 }
